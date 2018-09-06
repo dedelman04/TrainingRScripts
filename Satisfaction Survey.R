@@ -5,7 +5,7 @@ library(dplyr)
 
 ###########User input variables###########
 
-surveyDate <- as.Date("4/30/2018", format="%m/%d/%Y")  #input official survey date here
+surveyDate <- as.Date("8/31/2018", format="%m/%d/%Y")  #input official survey date here
 
 ##########################################
 
@@ -29,7 +29,7 @@ cols <- c("Responder",
           "Q4",
           "Q5",
           "Q6",
-          "Q7",
+#          "Q7",
           "Comment")
 
 
@@ -49,7 +49,7 @@ dataset$FirstName <- substr(dataset$EmailAddress, 1, atVector-1)
 
 #remove any rows with no name
 #dataset <- subset(dataset, FirstName!="")
-dataset %>% filter(FirstName != "")
+dataset <- dataset %>% filter(FirstName != "")
 
 
 #set blank responses to "NONE"
@@ -59,7 +59,7 @@ dataset$Q3[dataset$Q3==""]<-"NONE"
 dataset$Q4[dataset$Q4==""]<-"NONE"
 dataset$Q5[dataset$Q5==""]<-"NONE"
 dataset$Q6[dataset$Q6==""]<-"NONE"
-dataset$Q7[dataset$Q7==""]<-"NONE"
+#dataset$Q7[dataset$Q7==""]<-"NONE"
 
 #data frame for getting numerical score
 responseDF <- data.frame(Q1=c("NONE", 
@@ -72,7 +72,11 @@ responseDF <- data.frame(Q1=c("NONE",
 
 #join data to score table multiple times to score each question
 #dynamically build the "by" parameter to step through each Qx column
-for (i in 1:7){
+
+#######
+####change 1:n as needed to reflect the number of questions of the actual survey####
+#######
+for (i in 1:6){
   nm <- paste("Q", i, sep="")
   name <- paste("Q", i, "Score", sep="")
 
@@ -94,7 +98,7 @@ cleanDF <- data.frame(SurveyIdx = c(idx:idxEnd) #+nrow(scoredDF))
                       ,Q4 = scoredDF$Q4Score
                       ,Q5 = scoredDF$Q5Score
                       ,Q6 = scoredDF$Q6Score
-                      ,Q7 = scoredDF$Q7Score
+#                      ,Q7 = scoredDF$Q7Score
                       ,Status = c(rep("", nrow(scoredDF)))
                       , stringsAsFactors = FALSE)
 
@@ -104,8 +108,11 @@ cleanDF$Status[cleanDF$Q1==0 |
                  cleanDF$Q3==0 |
                  cleanDF$Q4==0 |
                  cleanDF$Q5==0 |
-                 cleanDF$Q6==0 |
-                 cleanDF$Q7==0] <- "INC"
+                 cleanDF$Q6==0 ] <- "INC"
+
+##Uncomment for Q7, etc                 
+#                 cleanDF$Q7==0] <- "INC"
+##
 
 #Export the "surveys" tab
 write.table(data.frame(SurveyIdx = cleanDF$SurveyIdx,
@@ -155,7 +162,9 @@ qtext = read.csv(file="IT Customer satisfaction Survey.csv",
                  header=FALSE, 
                  sep=",", nrows=1, stringsAsFactors = FALSE)
 
-qtext_clean <- as.character(qtext[, 10:16])
+#####Change 10:xx depending on survey length
+qtext_clean <- as.character(qtext[, 10:15])
+#####
 
 q_length <- length(qtext_clean)
 
