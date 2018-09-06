@@ -1,3 +1,12 @@
+max <- dataset$AttemptDur %>% max()
+min <- dataset$AttemptDur %>% min()
+med <- dataset %>% group_by(ServerName) %>% summarize(n=n()) %>% .$n
+med <- median(med)
+
+dataset <- dataset %>% group_by(ServerName) %>% filter(n() >= med) %>% 
+  mutate(Success = Success, AttemptDur = AttemptDur) %>% ungroup()
+
+
 #Filter top 50%
 dataset <- dataset %>% group_by(ServerName) %>% filter(n() >= med) %>% ungroup()
 
