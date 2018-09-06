@@ -157,8 +157,10 @@ qtext = read.csv(file="IT Customer satisfaction Survey.csv",
 
 qtext_clean <- as.character(qtext[, 10:16])
 
-q.df <- data.frame(Survey.Date = as.Date(c(rep(surveyDate, length(qtext_clean)))),
-                   "Q No" = c(1:7),
+q_length <- length(qtext_clean)
+
+q.df <- data.frame(Survey.Date = as.Date(c(rep(surveyDate, q_length))),
+                   "Q No" = c(1:q_length),
                    "Q Text" = qtext_clean)
 
 #Write out question file
