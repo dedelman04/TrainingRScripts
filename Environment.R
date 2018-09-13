@@ -18,4 +18,4 @@ library(tidyr)
 library(seriation) # package for reordering a distance matrix
 library(gtools)
 library(dslabs)
-
+library(Lahman)
