@@ -127,3 +127,148 @@ dat %>% group_by(lgID) %>%
 #show plot
 # %>% ggplot(aes(x=lgID, y=estimate, ymin=conf.low, ymax=conf.high)) + 
 #   geom_errorbar() + geom_point()
+
+#####
+#linear model for Runs vs BB, 1B, 2B, 3B, HR
+# - assumes each is approximately normal
+# - assumes they are jointly normal, i.e. if hold all but one fixed, relationship is linear and
+#    slope beta does not depend on any of the other 4
+#####
+
+#set up linear model
+fit <- Teams %>% filter(yearID %in% 1961:2001) %>%
+        mutate(BB = BB/G,
+               singles = (H-X2B-X3B-HR)/G,
+               doubles = X2B/G,
+               triples = X3B/G,
+               HR = HR/G,
+               R = R/G) %>%
+  lm(R ~ BB + singles + doubles + triples + HR, data = .)
+
+coefs <- tidy(fit, conf.int = TRUE)
+coefs
+
+#predict for 2002
+Teams %>% filter(yearID %in% 2002) %>%
+  mutate(BB = BB/G,
+         singles = (H-X2B-X3B-HR)/G,
+         doubles = X2B/G,
+         triples = X3B/G,
+         HR = HR/G,
+         R = R/G) %>%
+  mutate(R_hat = predict(fit, newdata = .)) %>%
+  ggplot(aes(x=R_hat, y=R, label=franchID))+geom_point()+geom_label()+geom_abline()
+
+#average plate appearances (simplified) per team per game
+pa_per_game <- Batting %>% filter(yearID == 2002) %>%
+  group_by(teamID) %>%
+  summarize(pa_per_game = sum(AB+BB)/max(G)) %>%
+  .$pa_per_game %>%
+  mean
+
+#select player data from 1999-2001, adjusting for average PA per game
+#predict runs per game if all 9 players were a single one from the population
+players <- Batting %>% filter(yearID %in% 1999:2001) %>%
+  group_by(playerID) %>%
+  mutate(PA = AB + BB) %>%
+  summarize(G = sum(PA)/pa_per_game,
+            BB = sum(BB)/G,
+         singles = sum(H-X2B-X3B-HR)/G,
+         doubles = sum(X2B)/G,
+         triples = sum(X3B)/G,
+         HR = sum(HR)/G,
+         AVG = sum(H)/sum(AB), #get batting average
+         PA = sum(PA)) %>%
+  filter(PA >= 300) %>%     #only players with 300+ PA
+  select(-G) %>%          #all data except games played
+  mutate(R_hat = predict(fit, newdata = .)) #same LM from above
+  
+players %>% ggplot(aes(x=R_hat)) + geom_histogram(binwidth = 0.5)
+
+#Add salaries
+players <- Salaries %>%
+  filter(yearID == 2002) %>%
+  select(playerID, salary) %>%
+  right_join(players, by="playerID")
+
+#Add primary position
+players <- Fielding %>% filter(yearID == 2002) %>%
+  filter(! POS %in% c("OF", "P") ) %>%  #Remove all outfielders (???) and pitchers
+  group_by(playerID) %>% 
+  top_n(1, G) %>%    #Only most G at that position
+  filter(row_number(G) == 1) %>%  #Only take 1st row in case of ties
+  ungroup() %>% 
+  select(playerID, POS) %>%
+  right_join(players, by="playerID") %>%
+  filter(!is.na(POS) & !is.na(salary))
+
+#Add name and year of debut
+players <- Master %>% select(playerID, nameFirst, nameLast, debut) %>%
+  right_join(players, by="playerID")
+
+#Top 10 in R_hat
+players %>% select(nameFirst, nameLast, POS, salary, R_hat) %>%
+  arrange(desc(R_hat)) %>% top_n(10)
+
+#plot salary(log) vs r_hat, by position
+players %>% ggplot(aes(salary, R_hat))+geom_point(aes(color=POS))+scale_x_log10()
+
+#plot only players likely to be available (4+ years of service)
+players %>% filter(debut < 1998) %>%
+  ggplot(aes(salary, R_hat))+geom_point(aes(color=POS))+scale_x_log10()
+
+######
+#Regression Fallacy (aka "Sophomore Slump")
+######
+
+#Find all players that have won rookie of the year
+playerinfo <- Fielding %>% group_by(playerID) %>%
+  arrange(desc(G)) %>% slice(1) %>%   #arrange by games per position and take "top" row
+  ungroup() %>% left_join(Master, by="playerID") %>%
+  select(playerID, nameFirst, nameLast, POS)
+
+ROY <- AwardsPlayers %>%
+  filter(awardID == "Rookie of the Year") %>%
+  left_join(playerinfo, by="playerID") %>%
+  rename(rookie_year = yearID) %>%
+  right_join(Batting, by="playerID") %>%
+  mutate(AVG = H/AB) %>%
+  filter(POS != "P")
+
+#Filter only rookie and sophomore stats
+ROY <- ROY %>% filter(yearID == rookie_year | yearID == rookie_year+1) %>%
+  group_by(playerID) %>%
+  mutate(rookie = ifelse(yearID == min(yearID), "rookie", "sophomore")) %>%
+  filter(n() == 2) %>%
+  ungroup %>%
+  select(playerID, rookie_year, rookie, nameFirst, nameLast, AVG)
+
+#Pivot to have one column for rookie and one for sophomore BA
+ROY <- ROY %>% spread(rookie, AVG) %>% arrange(desc(rookie))
+ROY
+#In the top 10, the slump can be easily seen
+#over entire ROY dataset, 68% had lower BA in year 2
+
+######
+#Now expand to all players 2013-2014 with 130+ AB
+#####
+
+two_year <- Batting %>% filter(yearID %in% 2013:2014) %>%
+  group_by(playerID, yearID) %>%
+  filter(sum(AB) >= 130) %>%
+  summarize(AVG = sum(H)/sum(AB)) %>%
+  ungroup %>%
+  spread(yearID, AVG) %>%
+  filter(!is.na(`2013`) & !is.na(`2014`)) %>%
+  left_join(playerinfo, by="playerID") %>%
+  filter(POS != "P") %>%
+  select(-POS) %>%
+  arrange(desc(`2013`)) %>%
+  select(-playerID)
+
+#plot & summarize 2013 vs 2014
+two_year %>% ggplot(aes(`2013`, `2014`))+geom_point()
+summarize(two_year, cor(`2013`, `2014`))
+#correlation is there, but weak
+
+
