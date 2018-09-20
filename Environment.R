@@ -19,3 +19,8 @@ library(seriation) # package for reordering a distance matrix
 library(gtools)
 library(dslabs)
 library(Lahman)
+library(googlesheets)
+library(readr)
+library(readxl)
+library(HistData)
+library(broom)
