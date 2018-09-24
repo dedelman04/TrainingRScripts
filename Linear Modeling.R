@@ -271,4 +271,88 @@ two_year %>% ggplot(aes(`2013`, `2014`))+geom_point()
 summarize(two_year, cor(`2013`, `2014`))
 #correlation is there, but weak
 
+#####
+#Spurious Correlation
+####
+
+#Monte Carlo simulation showing spurious correlation
+N <- 25
+G <- 1000000
+#simulate 1,000,000 groups with 25 members each
+sim_data <- tibble(group = rep(1:G, each = N), X = rnorm(N*G), Y = rnorm(N*G))
+
+#determine correlations between RNV per group
+res <- sim_data %>% group_by(group) %>% summarize(r = cor(X,Y)) %>% arrange(desc(r))
+res
+
+#plot top 25
+sim_data %>% filter(group == res$group[which.max(res$r)]) %>% 
+  ggplot(aes(X, Y)) + geom_point() + geom_smooth(method="lm")
+
+#recall that correlation itself is a NRV
+res %>% ggplot(aes(x=r))+geom_histogram(binwidth=0.1)
+
+#perform regression and look at p-value  --> "P-hacking"
+sim_data %>% filter(group == res$group[which.max(res$r)]) %>%
+  do(tidy(lm(Y ~ X, data = .)))
+
+####
+#Cause and effect reversal
+####
+
+#Regress father heights based on son heights
+data("GaltonFamilies")
+GaltonFamilies %>%
+  filter(childNum == 1 & gender == "male") %>%
+  select(father, childHeight) %>%
+  rename(son = childHeight) %>%
+  do(tidy(lm(father ~ son, data=.)))
+#model is technically correct, but the interpretation of 
+#son height causes father height is incorrect
+
+####
+#Confounding
+####
+
+#Berkeley admissions data, men v women
+data(admissions)
+admissions %>% group_by(gender) %>%
+  summarize(percentage = round(sum(admitted*applicants)/sum(applicants), 1))
+
+#Chi-squared test of total admitted vs not admitted
+admissions %>% group_by(gender) %>%
+  summarize(total_admitted = round(sum(admitted/100*applicants)),
+            not_admitted = sum(applicants) - sum(total_admitted)) %>%
+  select(-gender) %>%
+  do(tidy(chisq.test(.)))
+
+#examine data by major
+admissions %>% select(major, gender, admitted) %>%
+  spread(gender, admitted) %>%
+  mutate(women_minus_men = women - men)
+#note that 4 of 6 majors favor women
+#differences all smaller than 14% as totals would indicate
+###confounding paradox###
+
+#plot major admission% (i.e. selectivity) vs women applicants, faceted by major
+#note that lower selectivity = harder to get into
+admissions %>% group_by(major) %>%
+  summarize(major_selectivity = sum(admitted*applicants)/sum(applicants),
+            percent_women_applicants = sum(applicants*(gender=="women")/sum(applicants))*100) %>%
+  ggplot(aes(major_selectivity, percent_women_applicants, label=major)) + geom_text()
+         
+#stack plot for percent admitted by gender by major
+admissions %>% mutate(percent_admitted = admitted*applicants/sum(applicants)) %>%
+  ggplot(aes(gender, y=percent_admitted, fill=major))+
+  geom_bar(stat = "identity", position = "stack")
+#still does not show percent admission by major
+
+#stratify by major, i.e. control for the confounder
+admissions %>%
+  ggplot(aes(major, admitted, col=gender, size=applicants)) + geom_point()
+#differences seems to go away - high admission rate for small # admissions in A & B
+
+#stratify by major, compute difference, then average
+admissions %>% group_by(gender) %>% summarize(average=mean(admitted))
+
 
