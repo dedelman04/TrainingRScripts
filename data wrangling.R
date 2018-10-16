@@ -159,4 +159,29 @@ setequal(1:5, 5:1)  #TRUE
 #with dplyr, provides information on what is different between tab1 and tab2
 setequal(tab1, tab2)
 
+################
+####Web scraping
+################
+
+###requires rvest library
+url <- "https://en.wikipedia.org/wiki/Murder_in_the_United_States_by_state"
+##read in all html
+h <- read_html(url)
+
+##find all instances of node type table
+##html_node() gets first instance only
+tab <- h %>% html_nodes("table")
+tab <- tab[[2]]
+
+#convert to data frame
+tab <- tab %>% html_table
+tab <- tab %>% setNames(c("state", "population", "total", "murders", "gun_murders", "gun_ownership", "total_rate", "murder_rate", "gun_murder_rate"))
+
+
+#FB Perspective 1st down rates
+url2 <- "http://www.footballperspective.com/eli-manning-deshaun-watson-and-first-down-rates/"
+h2 <- read_html(url2)
+
+firstdown <- h2 %>% html_nodes("table")
+firstdown <- firstdown[[1]] %>% html_table
 
