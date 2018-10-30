@@ -65,6 +65,7 @@ PLAcc <- map_dbl(PLCO, function(x){
 data.frame(PLCO, PLAcc) %>% ggplot(aes(PLCO, PLAcc))+geom_point()+geom_line()+geom_text(label=PLCO)
 PLResults <- c("Petal.Length", PLCO[which.max(PLAcc)], max(PLAcc))
 
+#PWCO <- seq(round(RangePW[1], 0), round(RangePW[2], 0), 0.2 )
 PWCO <- round(seq(round(RangePW[1], 0), round(RangePW[2], 0), length.out = 10 ), 1)
 
 PWAcc <- map_dbl(PWCO, function(x){
