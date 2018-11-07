@@ -40,6 +40,8 @@ mean(y_hat == test_set$sex)
 
 #First attempt at improving accuracy
 #If heights within 2 sd of average male height --> male
+#Note that this really means that height > mean - 2sd because it makes
+#no sense to have the upper extreme be female
 y_hat <- ifelse(x > 62, "Male", "Female") %>% factor(levels = levels(test_set$sex))
 mean(y == y_hat)  #using y this time since we used x, not test_set
 
@@ -62,7 +64,7 @@ best_cutoff
 
 #Now test the max on the test data set and determine accuracy
 y_hat <- ifelse(test_set$height > best_cutoff, "Male", "Female") %>% factor(levels = levels(test_set$sex))
-mean(test_set$sex == y_hat)  #using y this time since we used x, not test_set
+mean(test_set$sex == y_hat)
 
 #simple accuracy is deceptive
 #Confusion Matrix tabulates each combination of predicted and actual value
@@ -93,7 +95,8 @@ confusionMatrix(data = y_hat, reference = test_set$sex)
 #   = 1 / (.5 * ( 1/recall + 1/precision)) = 2*(Pre*Rec/(Pre+Rec))
 # aka F1 score
 
-#Often either sensitivity (plane safety) or specificity (capital murder case) is preferred bc
+#Often either sensitivity (plane safety - don't want false negatives)
+#or specificity (capital murder case - don't want false positives) is preferred bc
 #of the real world outcomes
 #Beta can be used to weight either rate to get a weighted harmonic average
 # 1 / ( (beta^2/(1+beta^2))*(1/recall) + (1/(1+beta^2))*(1/precision) )
