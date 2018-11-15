@@ -1,10 +1,12 @@
 setwd("H:/DEdelman/")
 
+library(maps)## load maps first to avoid map conflict with purrr
+library(MASS)## load MASS and matrixStats first to avoid select and count conflict
+library(matrixStats)
 library(tidyverse)
 #library(htmlwidgets)
 #library(data.table)
 #library(RevoScaleR)
-library(matrixStats)
 library(dplyr)
 library(stringr)
 library(lubridate)
