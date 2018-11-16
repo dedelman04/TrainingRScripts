@@ -39,7 +39,7 @@ sd(quantiles)
 #use 10 bootstrap samples to estimate EV/SD on initial y
 set.seed(1)
 y <- rnorm(100, 0, 1)
-B <- 10000
+B <- 10
 
 stars <- replicate(B, {
   y_star <- sample(y, replace=TRUE)
@@ -48,3 +48,12 @@ stars <- replicate(B, {
 
 mean(stars)
 sd(stars)
+
+set.seed(1)
+indexes <- createResample(y, 10)
+q_75_star <- sapply(indexes, function(ind){
+  y_star <- y[ind]
+  quantile(y_star, 0.75)
+})
+mean(q_75_star)
+sd(q_75_star)
