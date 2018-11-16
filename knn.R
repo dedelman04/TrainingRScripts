@@ -88,6 +88,7 @@ data.frame(k=ks, train = accuracy$train, test = accuracy$test) %>%
 
 #Predict sex based on height using knn
 #Get F1 = Balanced Accuracy from confusion Matrix
+###Actually, use F_meas function
 
 data("heights")
 y <- heights$height  ####THIS IS WHERE I SCREWED UP - should be SEX
