@@ -1,4 +1,7 @@
 #Bootstrapping
+n <- 10^6
+income <- 10^(rnorm(n, 4.656786, 0.4394738))
+hist(log10(income))
 
 #Used when you don't have access to the entire population to determine median
 # sample median M estimates population median m
