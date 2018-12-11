@@ -10,18 +10,23 @@ polls_2008 %>% mutate(resid = resid) %>%
 span <- 7
 fit <- with(polls_2008, 
             ksmooth(day, margin,  x.points = day, kernel="normal", bandwidth = span))
-          #kernel can be box (no weighting) or normal (weighting via normal dist)
-polls_2008 %>% mutate(smooth = fit$y) %>%
+          #kernel can be box (no weighting) or normal (weighting via normal dist); 
+          #normal tends to be smoother
+fit_box <- with(polls_2008, 
+                ksmooth(day, margin,  x.points = day, kernel="box", bandwidth = span))
+polls_2008 %>% mutate(smooth = fit$y, smooth_box = fit_box$y) %>%
   ggplot(aes(day, margin)) +
   geom_point(size = 3, alpha = .5, color = "grey") + 
-  geom_line(aes(day, smooth), color="red")
+  geom_line(aes(day, smooth), color="red")+
+  geom_line(aes(day, smooth_box), color="blue")
+
 
 #loess (Local weighted regression)
 #create local lines b0 + b1(xi - x0) around each x0; spans are generally larger
 total_days <- diff(range(polls_2008$day))
 span <- 21/total_days
 
-fit <- loess(margin ~ day, degree=1, span = span, data=polls_2008)
+fit_loess <- loess(margin ~ day, degree=1, span = span, data=polls_2008)
       #loess kernel is specified by degree = degree of polynomial to fit
       #####NOTE - default degree is 2 (parabola)#####
       #weighting is done by Tukey tri-weight instead of normal/Gaussian distro
@@ -29,11 +34,31 @@ fit <- loess(margin ~ day, degree=1, span = span, data=polls_2008)
       #span parameter in loess is a proportion, not an integer (bandwidth = span * # data points)
       #can fit more robustly, where outliers are identified during first pass and
       #down-weighted for second pass (parameter: family = "symmetric")
-polls_2008 %>% mutate(smooth = fit$fitted) %>%
+polls_2008 %>% 
+  mutate(smooth = fit$y, smooth_box = fit_box$y, smooth_loess = fit_loess$fitted) %>%
   ggplot(aes(day, margin)) +
   geom_point(size = 3, alpha = .5, color = "grey") +
-  geom_line(aes(day, smooth), color="red")
+  geom_line(aes(day, smooth), color="red")+
+  geom_line(aes(day, smooth_box), color="blue")+
+  geom_line(aes(day, smooth_loess), color="black")
 
+#different spans give different smoothness
+spans <- c(0.1, 0.15, 0.25, 0.66)
+loess_curves <- function (x) {
+    fit <- loess(margin ~ day, degree = 1, span = x, data=polls_2008)
+    lc <- cbind(day = polls_2008$day, margin = polls_2008$margin,
+                span=rep(x, length(polls_2008$margin)), smooth=fit$fitted)
+#    df <- rbind(df, lc)
+  
+}
+
+df <- do.call(rbind, lapply(spans, loess_curves))
+
+data.frame(df) %>% ggplot(aes(day, margin))+geom_point(size=3, alpha=.5, color="grey")+
+  facet_wrap(~ span)+
+  geom_line(aes(day, smooth), color="black")
+
+  
 #loess with degree = 2 vs 1
 total_days <- diff(range(polls_2008$day))
 span <- 28/total_days
