@@ -91,7 +91,7 @@ data.frame(sds) %>% ggplot(aes(sds))+geom_histogram()
 #turn into a grid and plot
 image(1:28, 1:28, matrix(sds, 28, 28)[, 28:1])
 
-#Let's remove all predictors whose SD is above 60
+#Let's keep only those predictors whose SD is above 60
 new_x <- x[, colSds(x) > 60]
 dim(new_x)
 
@@ -126,8 +126,8 @@ bin_x[bin_x > 255/2] <- 1
 bin_X <- (x > 255/2)*1  #gives False * 1 = 0 or True * 1 = 1
 
 #Compare binarized and non-binarized; note very little loss of information
-image(1:28, 1:28, matrix(x[1,], 28, 28))
-image(1:28, 1:28, matrix(bin_x[1,], 28, 28))
+image(1:28, 1:28, matrix(x[3,], 28, 28))
+image(1:28, 1:28, matrix(bin_x[3,], 28, 28))
 
 # Challenge 5 - standardize using vectorization
 # matrix +/- vector does the operation row element by row element (vector is column)
@@ -149,7 +149,7 @@ x <- matrix(rnorm(100*10), 100, 10)
 dim(x)
 nrow(x)
 
-#For each digit in mnist, compoute proportion of pixels in grey area, 50 < x < 205
+#For each digit in mnist, compute proportion of pixels in grey area, 50 < x < 205
 x <- mnist$train$images
 y <- mnist$train$labels
 

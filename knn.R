@@ -1,5 +1,6 @@
 #k-nearest neighbors
 data("mnist_27")
+mnist_27$test %>% ggplot(aes(x_1, x_2, color=y)) + geom_point()
 
 #knn similar to bin smoothing, but more easily adapted to mulitple dimensions
 #  define distances between observations based on features
@@ -29,7 +30,7 @@ knn_fit_2 <- knn3(as.matrix(mnist_27$train[,2:3]), y = mnist_27$train$y)
 knn_fit <- knn3(y ~ ., data = mnist_27$train, k=5)
 
 #predict maximizes probablility for each class (2, 7)
-y_hat_knn <- predict(knn_fit, mnist_27$test, type = "class")
+y_hat_knn <- predict(knn_fit, mnist_27$test, type = "class")  #"class" gives actual predicted outcomes
 confusionMatrix(data = y_hat_knn, reference = mnist_27$test$y)$overall["Accuracy"]
 
 #Note that the model may be overtrained - accuracy is higher against training set than test set
@@ -79,6 +80,16 @@ data.frame(ks, test=accuracy$test, train=accuracy$train) %>%
 data.frame(k=ks, train = accuracy$train, test = accuracy$test) %>% 
   gather(type, accuracy, "train":"test") %>%
   ggplot(aes(x=k, y=accuracy, color = type))+geom_point()+geom_line()
+
+#Max aound 41 based on plot
+#Show true conditional probability vs Knn = 41
+p1 <- plot_cond_prob() + ggtitle("True conditional probability")
+
+knn_fit <- knn3(y ~ ., data = mnist_27$train, k = 41)
+p2 <- plot_cond_prob(predict(knn_fit, newdata = mnist_27$true_p)[,2]) +
+  ggtitle("kNN-41 estimate")
+grid.arrange(p1, p2, nrow=1)
+
 
 ######Exercise 1
 

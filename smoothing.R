@@ -46,10 +46,8 @@ polls_2008 %>%
 spans <- c(0.1, 0.15, 0.25, 0.66)
 loess_curves <- function (x) {
     fit <- loess(margin ~ day, degree = 1, span = x, data=polls_2008)
-    lc <- cbind(day = polls_2008$day, margin = polls_2008$margin,
+    cbind(day = polls_2008$day, margin = polls_2008$margin,
                 span=rep(x, length(polls_2008$margin)), smooth=fit$fitted)
-#    df <- rbind(df, lc)
-  
 }
 
 df <- do.call(rbind, lapply(spans, loess_curves))
