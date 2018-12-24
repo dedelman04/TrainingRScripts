@@ -59,10 +59,12 @@ tt <- colttests(x, y)
 pvals <- tt$p.value
 
 #3 find values of x_* that are statistically significantly associated with y (p-value <0.01)
-ind <- tt[pvals < 0.01, ]
+#ind <- tt[pvals < 0.01, ]
+ind <- which(pvals < 0.01)
 
 #4 re-train with new subset
-x_subset_p <- x[ ,rownames(ind)]
+#x_subset_p <- x[ ,rownames(ind)]
+x_subset_p <- x[, ind]
 
 fit_p <- train(x_subset_p, y, method="glm")
 
@@ -73,6 +75,12 @@ ks <- seq(101, 301, 25)
 
 fit_k <- train(x_subset, y, method = "knn", tuneGrid=data.frame(k = ks))
 ggplot(fit_k)
+
+#6 add selection step into algorithm for knn cross validation and rerun
+
+fit_cv <- train(x[, sample(p, length(ind))], y, method = "knn", tuneGrid = data.frame(k=ks))
+ggplot(fit_cv)
+fit_cv$results
 
 #7 train for tissue_gene_expression
 
