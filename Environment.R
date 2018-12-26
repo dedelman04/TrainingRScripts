@@ -39,3 +39,11 @@ plot_cond_prob <- function(p_hat=NULL){
     geom_raster(show.legend = FALSE) + 
     scale_fill_gradientn(colors=c("#F8766D","white","#00BFC4")) + 
     stat_contour(breaks=c(0.5),color="black") }
+
+plot_curve <- function(prob_df=NULL){
+  tmp <- prob_df 
+  if(!is.null(prob_df)){ tmp <- mutate(tmp, p=prob_df$p) } 
+  tmp %>% ggplot(aes(x_1, x_2, z=p, fill=p)) + 
+    geom_raster(show.legend = FALSE) + 
+    scale_fill_gradientn(colors=c("#F8766D","white","#00BFC4")) + 
+    stat_contour(breaks=c(0.5),color="black") }

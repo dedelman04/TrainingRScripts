@@ -40,3 +40,26 @@ p_hat_bayes <- f1*pi / (f1*pi + f0*(1 - pi))
 
 data.frame(x=x, prob=p_hat_bayes) %>% 
   ggplot(aes(x=x, y=prob))+geom_point()
+
+#Prevalence affects sensitivity and specificity
+#Our data set has a very small prevalence of females (vs gen pop)
+#so the algorithm is affected
+y_hat_bayes <- ifelse(p_hat_bayes > 0.5, "Female", "Male")
+sensitivity(data = factor(y_hat_bayes), reference = factor(test_set$sex))
+
+specificity(data = factor(y_hat_bayes), reference = factor(test_set$sex))
+
+#Naive Bayes allows us to set pi to overcome a biased data set
+
+pi_ub <- 0.5
+p_hat_bayes_unbiased <- f1*pi_ub / (f1*pi_ub + f0*(1-pi_ub)) 
+y_hat_bayes_unbiased <- ifelse(p_hat_bayes_unbiased> pi_ub, "Female", "Male")
+
+sensitivity(data = factor(y_hat_bayes_unbiased), reference = factor(test_set$sex))
+
+specificity(data = factor(y_hat_bayes_unbiased), reference = factor(test_set$sex))
+
+#Shows more intuitive cutoff @ ~ 66-67"
+qplot(x, p_hat_bayes_unbiased, geom = "line") + 
+  geom_hline(yintercept = 0.5, lty = 2) + 
+  geom_vline(xintercept = 67, lty = 2)
