@@ -31,6 +31,7 @@ library(lpSolve)
 library(rvest)
 library(caret)
 library(pdftools)
+library(rpart)
 
 plot_cond_prob <- function(p_hat=NULL){ 
   tmp <- mnist_27$true_p 
