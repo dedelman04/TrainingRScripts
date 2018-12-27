@@ -45,6 +45,7 @@ mnist_27$train %>% mutate(y = factor(y)) %>%
   facet_wrap(~y)
 
 #QDA starts to be computationally difficult as predictors increase
-# num of correlations = K*P(P-1)/2 for P predictors, K classes
-# leads to overfitting
+# num of correlations C = K*P(P-1)/2 for P predictors, K classes
+# Total parameters = 2P + C
+# leads to overfitting as parameters approached the size of the dataset
 
