@@ -44,9 +44,9 @@ colnames(x_test) <- colnames(mnist$train$images)
 control <- trainControl(method="cv", number=10, p=.9)
 train_knn <- train(x[, col_index], y, 
                    method = "knn",
-                   tuneGrid = data.frame(k=c(3,5,7)),
+                   tuneGrid = data.frame(k=c(1,3,5,7)),
                    trControl = control)
-ggplot(train_knn)
+ggplot(train_knn)  #Note accuracy peaks at 3 neighbors
 
 
 #Method for training against smaller subsets
@@ -58,3 +58,14 @@ train_knn <- train(x[index ,col_index], y[index],
                    method = "knn", 
                    tuneGrid = data.frame(k = c(3,5,7)),
                    trControl = control)
+
+#fit the entire dataset to the best knn model (k=3)
+fit_knn <- knn3(x[, col_index], y, k=3)
+
+#predict and show accuracy
+y_hat <- predict(fit_knn, x_test[, col_index], type="class")
+cm <- confusionMatrix(y_hat, factor(y_test))
+cm$overall["Accuracy"]
+
+#Show sensitivity and specificity
+cm$byClass[,1:2]
