@@ -33,6 +33,7 @@ library(caret)
 library(pdftools)
 library(rpart)
 library(randomForest)
+library(Rborist)
 
 plot_cond_prob <- function(p_hat=NULL){ 
   tmp <- mnist_27$true_p 

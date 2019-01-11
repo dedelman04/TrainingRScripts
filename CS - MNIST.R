@@ -82,3 +82,45 @@ cm_test <- confusionMatrix(y_hat_test, factor(y_test_test))
 cm_test$overall["Accuracy"]
 cm_test$byClass[,1:2]
 
+
+##Train and fit random forest with Rborist
+#use 5-fold cross validation, CV across 2 minimum node values and 5 random selection values
+#use 50 trees for all runs (nTree); random subset of 5000 for each run (nSamp)
+library(Rborist)
+control <- trainControl(method = "cv", number = 5, p= 0.8)
+grid <- expand.grid(minNode = c(1,5), predFixed = c(10,15,25,35,50))
+
+train_rf <- train(x[, col_index],
+                  y,
+                  method="Rborist",
+                  nTree = 50,
+                  trControl = control,
+                  tuneGrid = grid,
+                  nSamp = 5000)
+
+ggplot(train_rf)
+train_rf$bestTune
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
