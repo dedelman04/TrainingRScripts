@@ -18,6 +18,10 @@ index <- sample(nrow(mnist$train$images), 1000)
 x_test <- mnist$train$images[index, ]
 y_test <- factor(mnist$train$labels[index])
 
+index <- sample(nrow(mnist$test$images), 1000)
+x_test_test <- mnist$test$images[index, ]
+y_test_test <- factor(mnist$test$labels[index])
+
 ##
 #Perform some pre-processing
 ##
@@ -39,6 +43,8 @@ length(col_index)
 #add column names, as required by caret
 colnames(x) <- 1:ncol(mnist$train$images)
 colnames(x_test) <- colnames(mnist$train$images)
+colnames(x_test_test) <- colnames(mnist$test$images)
+
 
 ##Train a knn model across 3, 5, 7 neighbors, using k-fold cross-validation (k=10)
 control <- trainControl(method="cv", number=10, p=.9)
@@ -69,3 +75,10 @@ cm$overall["Accuracy"]
 
 #Show sensitivity and specificity
 cm$byClass[,1:2]
+
+###Predict against test set
+y_hat_test <- predict(fit_knn, x_test_test[, col_index], type="class")
+cm_test <- confusionMatrix(y_hat_test, factor(y_test_test))
+cm_test$overall["Accuracy"]
+cm_test$byClass[,1:2]
+
