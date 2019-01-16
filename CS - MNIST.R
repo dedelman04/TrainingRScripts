@@ -90,6 +90,7 @@ library(Rborist)
 control <- trainControl(method = "cv", number = 5, p= 0.8)
 grid <- expand.grid(minNode = c(1,5), predFixed = c(10,15,25,35,50))
 
+set.seed(123)
 train_rf <- train(x[, col_index],
                   y,
                   method="Rborist",
