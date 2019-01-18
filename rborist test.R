@@ -17,8 +17,11 @@ Rborist_func <- function(i) {
 #  })
 }
 
-RF_runs <- sapply(seq(1:100), Rborist_func) %>% t() %>% colnames(c("seed", "predFixed", "minNode")) %>%
-  mutate(rand = ifelse(seed %% 2 ==0, "Set", "Not Set"))
+RF_runs <- sapply(seq(1:100), Rborist_func)
 
+RF_runs <- RF_runs %>% t() %>% as.data.frame(col.names = c("seed", "predFixed", "minNode")) %>%
+  mutate(rand = ifelse(seed %% 2 == 0, "Set", "Not Set"))
+
+RF_runs %>% ggplot(aes(x=predFixed))+geom_histogram()+facet_wrap(minNode ~ rand)
 
 res <- matrix(Rborist_results, 3, byrow=FALSE)

@@ -102,15 +102,26 @@ train_rf <- train(x[, col_index],
 ggplot(train_rf)
 train_rf$bestTune
 
+rm(mnist, x_test_test)
 
+#Optimize final tree structure
+fit_rf <- Rborist(x[, col_index], y,
+  ntree = 1000,
+  minNode = train_rf$bestTune$minNode,
+  predFixed = train_rf$bestTune$predFixed)
 
+#Predict and look at confusion matrix
+y_hat_rf <- factor(levels(y)[predict(fit_rf, x_test[, col_index])$yPred])
+cm <- confusionMatrix(y_hat_rf, y_test)
+cm$overall["Accuracy"]
 
-
-
-
-
-
-
+#Show images and their predicted values
+par(mfrow=c(3,4))
+for(i in 1:12){
+  image(matrix(x_test[i,], 28, 28)[, 28:1], 
+        main = paste("Our prediction:", y_hat_rf[i]),
+        xaxt="n", yaxt="n")
+}
 
 
 
