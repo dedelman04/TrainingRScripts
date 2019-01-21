@@ -56,4 +56,30 @@ ind <- acc > mean(y_hat == mnist_27$test$y)
 sum(ind)
 models[ind]
 
+#Q6 cross validate all of the models and get new accuracy figures
+control <- trainControl(method="cv", number=10, p=.9)
+acc_cv <- lapply(models, function(model){ 
+  print(model)
+  fit <- train(y ~ ., method = model, data = mnist_27$train, trControl=control)
+  fit$results$Accuracy
+}) 
 
+acc_means <- sapply(seq(1:23), function(i){min(acc_cv[[i]])})
+mean(acc_means)
+
+##Official code
+acc_hat <- sapply(fits, function(fit) min(fit$results$Accuracy))
+mean(acc_hat)
+
+#Q7 ensemble with accuracy > 0.8 only
+pred_acc <- preds[, which(acc >= 0.8)]
+
+maj_vote <- ifelse(rowSums(pred_acc=="2") >= 12, "2", "7") %>% factor()
+
+e_acc <- confusionMatrix(data = maj_vote, reference = mnist_27$test$y)$overall["Accuracy"]
+
+###official code
+ind <- acc_hat >= 0.8
+votes <- rowMeans(pred[,ind] == "7")
+y_hat <- ifelse(votes>=0.5, 7, 2)
+mean(y_hat == mnist_27$test$y)
