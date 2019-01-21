@@ -102,7 +102,7 @@ train_rf <- train(x[, col_index],
 ggplot(train_rf)
 train_rf$bestTune
 
-rm(mnist, x_test_test)
+#rm(mnist, x_test_test)
 
 #Optimize final tree structure
 fit_rf <- Rborist(x[, col_index], y,
@@ -122,17 +122,49 @@ for(i in 1:12){
         main = paste("Our prediction:", y_hat_rf[i]),
         xaxt="n", yaxt="n")
 }
+par(mfrow=c(1,1))
+#Variable importance
+#Rborist does not support it; use randomForest instead, with ALL predictors
+rf <- randomForest(x,y, ntree=50)
 
+imp <- importance(rf)
 
+#plot importance as an image
+image(matrix(imp, 28, 28))
 
+#compare knn with random forest to visualize where we predicted incorrectly
+p_max <- predict(fit_knn, x_test[, col_index])
+p_max <- apply(p_max, 1, max)
+ind <- which(y_hat != y_test)
+ind <- ind[order(p_max[ind], decreasing=TRUE)]
 
+par(mfrow=c(3,4))
+for(i in ind[1:12]){
+  image(matrix(x_test[i,], 28, 28)[, 28:1], 
+        main = paste0("Pr(",y_hat[i],")=",p_max[i]," is a ",y_test[i]),
+        xaxt="n", yaxt="n")
+}
 
+#and same for random forest
+p_max <- predict(fit_rf, x_test[,col_index])$census  
+p_max <- p_max / rowSums(p_max)
+p_max <- apply(p_max, 1, max)
+ind  <- which(y_hat_rf != y_test)
+ind <- ind[order(p_max[ind], decreasing = TRUE)]
 
+for(i in ind[1:12]){
+  image(matrix(x_test[i,], 28, 28)[, 28:1], 
+        main = paste0("Pr(",y_hat_rf[i],")=",p_max[i]," is a ",y_test[i]),
+        xaxt="n", yaxt="n")
+}
 
+par(mfrow=c(1,1))
 
-
-
-
-
-
-
+#Ensembles combine results from different algorithms to provide a stronger result
+#We will average the results of KNN and RF
+p_rf <- predict(fit_rf, x_test[, col_index])$census
+p_rf <- p_rf / rowSums(p_rf)
+p_knn <- predict(fit_knn, x_test[, col_index])
+p <- (p_rf + p_knn)/2
+y_pred <- factor(apply(p, 1, which.max)-1)
+confusionMatrix(y_pred, y_test)
